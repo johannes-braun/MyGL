@@ -60,6 +60,6 @@ set(MYGL_GL_XML_PATH ${PROJECT_SOURCE_DIR}/res/gl.xml)
 add_definitions(-DMYGL_GL_XML_PATH="${MYGL_GL_XML_PATH}")
 
 if(MYGL_INSTALL)
-    install(DIRECTORY include/mygl DESTINATION include
-        FILES_MATCHING PATTERN ${PROJECT_SOURCE_DIR}/include/*.hpp)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/mygl DESTINATION include/mygl
+        FILES_MATCHING PATTERN "*.hpp")
 endif()
