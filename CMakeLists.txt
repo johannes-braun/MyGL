@@ -56,7 +56,7 @@ target_include_directories(mygl_gen PUBLIC ${INCLUDES})
 add_custom_command(TARGET mygl_gen POST_BUILD COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mygl_gen ${PROJECT_SOURCE_DIR}/include WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 file(DOWNLOAD https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/master/xml/gl.xml ${PROJECT_SOURCE_DIR}/res/gl.xml)
-set(MYGL_GL_XML_PATH ${PROJECT_SOURCE_DIR}/res/gl.xml)
+set(MYGL_GL_XML_PATH "${PROJECT_SOURCE_DIR}/res/gl.xml")
 add_definitions(-DMYGL_GL_XML_PATH="${MYGL_GL_XML_PATH}")
 
 if(MYGL_INSTALL)
