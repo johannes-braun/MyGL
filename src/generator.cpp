@@ -285,6 +285,7 @@ This header contains all loaded extension definitions.
         { "buffers", "gl_buffer_t" },
         { "framebuffer", "gl_framebuffer_t" },
         { "framebuffers", "gl_framebuffer_t" },
+        { "fbos", "gl_framebuffer_t" },
         { "drawFramebuffer", "gl_framebuffer_t" },
         { "readFramebuffer", "gl_framebuffer_t" },
         { "texture", "gl_texture_t" },
