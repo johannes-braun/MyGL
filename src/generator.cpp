@@ -126,6 +126,7 @@ This header contains all loaded extension definitions.
         }
     }
     typedefs["GLboolean"] = "bool";
+    typedefs.erase("GLbitfield");
     
     for (pugi::xml_node feature : registry.children("feature"))
     {
@@ -263,7 +264,7 @@ This header contains all loaded extension definitions.
     {
         file_types << "enum class gl_" << handle << "_t : uint32_t {};\n";
     }
-    
+
     file_enums << R"cpp(enum GLenum {
 )cpp";
     for (pugi::xml_node enums_node : registry)
@@ -278,7 +279,25 @@ This header contains all loaded extension definitions.
             }
         }
     }
-    file_enums << R"cpp(};)cpp";
+    file_enums << R"cpp(};
+)cpp";
+    file_enums << "using GLbitfield = GLenum";
+    //for (pugi::xml_node enums_node : registry)
+    //{
+    //    if (std::strcmp(enums_node.attribute("type").as_string(), "bitmask") == 0)
+    //    {
+    //        file_enums << "\n\nenum class " << enums_node.attribute("group").as_string() << "{\n";
+    //        for (pugi::xml_node enums_val : enums_node.children("enum"))
+    //        {
+    //            auto it = enums.begin();
+    //            if ((it = enums.find(enums_val.attribute("name").as_string())) != enums.end())
+    //            {
+    //                file_enums << "    " << *it << " = GLenum::" << *it << ",\n";
+    //            }
+    //        }
+    //        file_enums << "};\n";
+    //    }
+    //}
     
     std::map<std::string, std::string> type_param{
         {"buffer", "gl_buffer_t"},
