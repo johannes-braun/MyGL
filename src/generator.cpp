@@ -283,9 +283,9 @@ This header contains all loaded extension definitions.
 )cpp";
     file_enums << "using GLbitfield = GLenum;";
     file_enums << R"cpp(
-GLenum operator|(const GLenum lhs, const GLenum rhs)
+constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
 {
-    return GLenum(uint32_t(lhs) | uint32_t(rhs));
+    return GLenum(unsigned(lhs) | unsigned(rhs));
 })cpp";
 
 
