@@ -10,10 +10,12 @@
 #include <experimental/filesystem>
 #include <iostream>
 
+#define stringize(X) #X
+
 int main(int argc, const char** argv)
 {
     pugi::xml_document settings;
-    settings.load_file(MYGL_SETTINGS_PATH);
+    settings.load_file(stringize(MYGL_SETTINGS_PATH));
 
     pugi::xml_node platform = settings.child("mygl-generator").child("platform");
     pugi::xml_node exts = settings.child("mygl-generator").child("extensions");
@@ -25,7 +27,7 @@ int main(int argc, const char** argv)
         enable_extensions.emplace(e.first_child().value());
 
     pugi::xml_document doc;
-    doc.load_file(MYGL_GL_XML_PATH);
+    doc.load_file(stringize(MYGL_GL_XML_PATH));
 
     constexpr const char* header = "#pragma once\n\n";
     constexpr const char* file_types_info = R"cpp(/*
