@@ -29,6 +29,8 @@ int main(int argc, const char** argv)
     pugi::xml_document doc;
     doc.load_file(MYGL_GL_XML_PATH);
 
+    std::cout << "Your XML settings file is at " << MYGL_SETTINGS_PATH << '\n';
+
     constexpr const char* header = "#pragma once\n\n";
     constexpr const char* file_types_info = R"cpp(/*
 This header contains the needed basic types for OpenGL.
