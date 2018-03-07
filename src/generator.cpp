@@ -363,6 +363,9 @@ This header contains all loaded extension definitions.
         bool is_query = false;
         if (!is_tf && pname.find("Quer") != std::string::npos)
             is_query = true;
+        bool is_framebuffer = false;
+        if (!is_tf && !is_query && pname.find("Framebuffer") != std::string::npos)
+            is_framebuffer = true;
 
         for (auto&& p : c.children("param"))
         {
@@ -380,7 +383,7 @@ This header contains all loaded extension definitions.
                     {
                         file_functions << "gl_query_t";
                     }
-                    else if (type_param.count(p.child("name").first_child().value()) != 0)
+                    else if (type_param.count(p.child("name").first_child().value()) != 0 && !(strcmp(p.child("name").first_child().value(), "buffer") == 0 && is_framebuffer))
                     {
                         file_functions << type_param[p.child("name").first_child().value()];
                     }
