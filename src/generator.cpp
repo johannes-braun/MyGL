@@ -281,7 +281,7 @@ This header contains all loaded extension definitions.
     }
     file_enums << R"cpp(};
 )cpp";
-    file_enums << "using GLbitfield = GLenum";
+    file_enums << "using GLbitfield = GLenum;";
     //for (pugi::xml_node enums_node : registry)
     //{
     //    if (std::strcmp(enums_node.attribute("type").as_string(), "bitmask") == 0)
