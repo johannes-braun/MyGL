@@ -267,7 +267,7 @@ This header contains all loaded extension definitions.
     }
     for (auto&& handle : handle_types)
     {
-        file_types << "enum class gl_" << handle << "_t : uint32_t { null = 0 };\n";
+        file_types << "enum class gl_" << handle << "_t : uint32_t { zero = 0 };\n";
     }
 
     file_enums << R"cpp(enum GLenum {
