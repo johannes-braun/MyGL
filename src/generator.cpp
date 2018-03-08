@@ -19,12 +19,16 @@ int main(int argc, const char** argv)
 
     pugi::xml_node platform = settings.child("mygl-generator").child("platform");
     pugi::xml_node exts = settings.child("mygl-generator").child("extensions");
+    pugi::xml_node cmds = settings.child("mygl-generator").child("commands");
 
     bool core = std::strcmp(platform.first_child().value(), "compatibility") != 0;
     bool khrplatform = platform.attribute("use-khrplatform").as_bool(false);
     std::set<std::string> enable_extensions;
     for (pugi::xml_node e : exts.children("extension"))
         enable_extensions.emplace(e.first_child().value());
+    std::set<std::string> additional_commands;
+    for (pugi::xml_node c : cmds.children("command"))
+        additional_commands.emplace(c.first_child().value());
 
     pugi::xml_document doc;
     doc.load_file(MYGL_GL_XML_PATH);
@@ -183,6 +187,7 @@ This header contains all loaded extension definitions.
             }
         }
     }
+    commands.insert(additional_commands.begin(), additional_commands.end());
     for (auto&& ext : enable_extensions)
     {
         file_extensions << "#define " << ext << " " << 1 << "\n";
@@ -402,22 +407,32 @@ constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
             {
                 if (std::strcmp(param.name(), "ptype") == 0)
                 {
-                    if (is_tf && (memcmp(p.child("name").first_child().value(), "id", 2) == 0 || strcmp(p.child("name").first_child().value(), "xfb") == 0))
+                    const char* tname = param.first_child().value();
+                    if (std::strcmp(tname, "GLuint") == 0)
                     {
-                        file_functions << "gl_transform_feedback_t";
-                    }
-                    else if (is_query && (memcmp(p.child("name").first_child().value(), "id", 2) == 0))
-                    {
-                        file_functions << "gl_query_t";
-                    }
-                    else if (type_param.count(p.child("name").first_child().value()) != 0 && !(strcmp(p.child("name").first_child().value(), "buffer") == 0 && is_framebuffer))
-                    {
-                        file_functions << type_param[p.child("name").first_child().value()];
+                        if (is_tf && (memcmp(p.child("name").first_child().value(), "id", 2) == 0 || strcmp(p.child("name").first_child().value(), "xfb") == 0))
+                        {
+                            file_functions << "gl_transform_feedback_t";
+                        }
+                        else if (is_query && (memcmp(p.child("name").first_child().value(), "id", 2) == 0))
+                        {
+                            file_functions << "gl_query_t";
+                        }
+                        else if (type_param.count(p.child("name").first_child().value()) != 0 && !(strcmp(p.child("name").first_child().value(), "buffer") == 0 && is_framebuffer))
+                        {
+                            file_functions << type_param[p.child("name").first_child().value()];
+                        }
+                        else
+                        {
+                            if (typedefs.count(tname) != 0)
+                                file_functions << typedefs[tname];
+                            else
+                                file_functions << tname;
+                        }
                     }
                     else
                     {
-                        const char* tname = param.first_child().value();
-                        if(typedefs.count(tname) != 0)
+                        if (typedefs.count(tname) != 0)
                             file_functions << typedefs[tname];
                         else
                             file_functions << tname;

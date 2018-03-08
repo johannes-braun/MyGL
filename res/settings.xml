@@ -18,6 +18,9 @@
     <extension>GL_NV_uniform_buffer_unified_memory</extension>
     <extension>GL_NV_vertex_buffer_unified_memory</extension>
   </extensions>
+  <commands>
+    <command>glEnableClientState</command>
+  </commands>
 </mygl-generator>
 
 
