@@ -102,7 +102,7 @@ This header contains all loaded extension definitions.
                 for (pugi::xml_node tc : type.children())
                 {
                     if (std::strcmp(tc.name(), "apientry") == 0)
-                        strm << "*";
+                        strm << "";
                     else if (std::strcmp(tc.name(), "name") == 0)
                         strm << tc.first_child().value();
                     else
