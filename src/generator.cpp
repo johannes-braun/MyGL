@@ -291,6 +291,16 @@ This header contains all loaded extension definitions.
 constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
 {
     return GLenum(unsigned(lhs) | unsigned(rhs));
+}
+
+constexpr GLenum operator+(const GLenum lhs, const GLenum rhs)
+{
+    return GLenum(unsigned(lhs) + unsigned(rhs));
+}
+
+constexpr GLenum operator-(const GLenum lhs, const GLenum rhs)
+{
+    return GLenum(unsigned(lhs) - unsigned(rhs));
 })cpp";
 
 
