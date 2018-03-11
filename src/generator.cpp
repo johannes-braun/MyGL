@@ -458,7 +458,7 @@ constexpr GLenum operator-(const GLenum lhs, const GLenum rhs)
 
             first = false;
         }
-        file_functions << ");\n";
+        file_functions << ") noexcept;\n";
 
         file_functions_inl << "decltype(" << pname << ") " << pname << ";\n";
     }
