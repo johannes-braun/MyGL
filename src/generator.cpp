@@ -458,9 +458,13 @@ constexpr GLenum operator-(const GLenum lhs, const GLenum rhs)
 
             first = false;
         }
+#if __cpp_noexcept_function_type >= 201510
         file_functions << ") noexcept;\n";
-
         file_functions_inl << "decltype(" << pname << ") " << pname << ";\n";
+#else
+        file_functions << ");\n";
+        file_functions_inl << "decltype(" << pname << ") " << pname << ";\n";
+#endif
     }
 
     file_functions << "\n#if defined(MYGL_IMPLEMENTATION)\n#include \"gl_functions.inl\"\n#endif\n";
