@@ -20,6 +20,7 @@
   </extensions>
   <commands>
     <command>glEnableClientState</command>
+    <command>glDisableClientState</command>
   </commands>
 </mygl-generator>
 
