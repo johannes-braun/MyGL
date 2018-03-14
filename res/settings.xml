@@ -20,7 +20,71 @@
   </extensions>
   <commands>
     <command>glEnableClientState</command>
+    <command>glDisableClientState</command>
   </commands>
+  <rules>
+    
+    <handle-rule typename="gl_buffer_t" type="uint32_t">
+      <match param-expression="(readB|writeB|b)uffer(s|)" command-expression="((?!Framebuffer).)*"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_shader_program_t" type="uint32_t">
+      <match param-expression="program(s|)"/>
+      <match enable-return="true" command-expression="glCreate(Shader|)Program.*"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_shader_t" type="uint32_t">
+      <match param-expression="shader(s|)"/>
+      <match enable-return="true" command-expression="glCreateShader"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_query_t" type="uint32_t">
+      <match command-expression="gl.*Quer(y|ies).*" param-expression="id(s|)"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_framebuffer_t" type="uint32_t">
+      <match param-expression="((readF|drawF|f)ramebuffer(s|)|fbos)"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_texture_t" type="uint32_t">
+      <match param-expression="texture(s|)"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_renderbuffer_t" type="uint32_t">
+      <match param-expression="renderbuffer(s|)"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_sampler_t" type="uint32_t">
+      <match param-expression="sampler(s|)"/>
+    </handle-rule>
+
+    <handle-rule typename="gl_program_pipeline_t" type="uint32_t">
+      <match param-expression="pipeline(s|)"/>
+    </handle-rule>
+    
+    <handle-rule typename="gl_vertex_array_t" type="uint32_t">
+      <match param-expression="array(s|)" command-expression=".*VertexArray.*"/>
+      <match param-expression="vaobj"/>
+    </handle-rule>
+
+    <handle-rule typename="gl_command_list_nv_t" type="uint32_t">
+      <match param-expression="list(s|)"/>
+    </handle-rule>
+
+    <handle-rule typename="gl_state_nv_t" type="uint32_t">
+      <match param-expression="state(s|)"/>
+    </handle-rule>
+
+    <handle-rule typename="gl_path_nv_t" type="uint32_t">
+      <match param-expression="(path(s|)|firstPathName|pathBase|resultPath|srcPath)"/>
+      <match enable-return="true" command-expression="glGenPathsNV"/>
+    </handle-rule>
+
+    <handle-rule typename="gl_transform_feedback_t" type="uint32_t">
+      <match command-expression=".*TransformFeedback.*" param-expression="(id(s|)|xfb)"/>
+    </handle-rule>
+    
+  </rules>
 </mygl-generator>
 
 

@@ -9,6 +9,7 @@
 #include <map>
 #include <experimental/filesystem>
 #include <iostream>
+#include <regex>
 
 #define stringize(X) #X
 
@@ -20,6 +21,7 @@ int main(int argc, const char** argv)
     pugi::xml_node platform = settings.child("mygl-generator").child("platform");
     pugi::xml_node exts = settings.child("mygl-generator").child("extensions");
     pugi::xml_node cmds = settings.child("mygl-generator").child("commands");
+    pugi::xml_node rules = settings.child("mygl-generator").child("rules");;
 
     bool core = std::strcmp(platform.first_child().value(), "compatibility") != 0;
     bool khrplatform = platform.attribute("use-khrplatform").as_bool(false);
@@ -57,12 +59,12 @@ This header contains the function loader functionalities.
 This header contains all loaded extension definitions.
 */
 )cpp";
-     
+
     std::experimental::filesystem::path install_dir(argc > 1 ? argv[1] : "");
 
     std::cout << "Generating mygl headers...\n";
 
-    std::experimental::filesystem::create_directories(install_dir/"mygl");
+    std::experimental::filesystem::create_directories(install_dir / "mygl");
     std::ofstream file_types(install_dir / "mygl/gl_types.hpp");
     std::ofstream file_enums(install_dir / "mygl/gl_enums.hpp");
     std::ofstream file_functions(install_dir / "mygl/gl_functions.hpp");
@@ -73,7 +75,7 @@ This header contains all loaded extension definitions.
     std::ofstream file_gl(install_dir / "mygl/gl.hpp");
 
     file_gl << header << "#include \"gl_types.hpp\"\n#include \"gl_enums.hpp\"\n#include \"gl_functions.hpp\"\n#include \"gl_loader.hpp\"\n#include \"gl_extensions.hpp\"\n";
-    
+
     file_types << file_types_info << header << "#include <cinttypes>\n#include \"gl_enums.hpp\"\n\n";
     file_enums << file_enums_info << header;
     file_functions << file_functions_info << header << "#include \"gl_types.hpp\"\n\n";
@@ -102,7 +104,7 @@ This header contains all loaded extension definitions.
                 for (pugi::xml_node tc : type.children())
                 {
                     if (std::strcmp(tc.name(), "apientry") == 0)
-                        strm << "*";
+                        strm << "";
                     else if (std::strcmp(tc.name(), "name") == 0)
                         strm << tc.first_child().value();
                     else
@@ -113,7 +115,7 @@ This header contains all loaded extension definitions.
 
                 size_t it = 0;
                 for (auto&& td : typedefs)
-                    while((it = str.find(td.first)) != std::string::npos)
+                    while ((it = str.find(td.first)) != std::string::npos)
                         str.replace(str.begin() + it, str.begin() + it + td.first.size(), td.second);
                 file_types << str;
             }
@@ -131,7 +133,7 @@ This header contains all loaded extension definitions.
     }
     typedefs["GLboolean"] = "bool";
     typedefs.erase("GLbitfield");
-    
+
     for (pugi::xml_node feature : registry.children("feature"))
     {
         if (std::strcmp(feature.attribute("api").as_string(), "gl") != 0)
@@ -153,7 +155,7 @@ This header contains all loaded extension definitions.
                             beg += 12;
                         else if (memcmp(beg, "commands ", 9) == 0)
                             beg += 14;
-                        if (*(end-1) == ')')
+                        if (*(end - 1) == ')')
                         {
                             while (*end != '(')
                                 --end;
@@ -161,7 +163,7 @@ This header contains all loaded extension definitions.
                         }
                         sub = std::string(beg, end);
                         auto found = sub.find_first_of('-');
-                        if(found != std::string::npos)
+                        if (found != std::string::npos)
                         {
                             sub.resize(found - 1);
                         }
@@ -209,66 +211,44 @@ This header contains all loaded extension definitions.
         }
     }
 
-    std::set<std::string> handle_types;
     auto commands_node = doc.child("registry").find_child_by_attribute("commands", "namespace", "GL");
-    for (auto&& c : commands_node.children("command"))
+
+    struct matcher
     {
-        auto proto = c.child("proto");
-        std::string pname = proto.child("name").first_child().value();
-        auto it = commands.begin();
-        if ((it = commands.find(pname)) == commands.end())
-            continue;
-        
-        int create;
-        if ((create = memcmp(pname.data(), "glCreate", 8)) == 0 || memcmp(pname.data(), "glGen", 5) == 0)
+        std::regex param_expression{ "a^" };
+        std::regex command_expression{ ".*" };
+        std::string tname;
+        bool enable_return = false;
+    };
+
+    std::vector<matcher> type_matchers;
+
+    for (pugi::xml_node rule : rules)
+    {
+        if (std::strcmp(rule.name(), "handle-rule") == 0 )  
         {
-            auto nd = c.last_child().first_child().next_sibling();
-            if (true)// strlen(nd.value()) == 2 && nd.value()[1] == '*')
+            const std::string tname = rule.attribute("typename").as_string();
+            const std::string type = rule.attribute("type").as_string();
+
+            file_types << "enum class " << tname << " : " << type << " { zero = 0 };\n";
+
+            for (pugi::xml_node matcher_rule : rule)
             {
-
-                if (create == 0)
-                    pname.replace(pname.begin(), pname.begin() + 8, "");
-                else
-                    pname.replace(pname.begin(), pname.begin() + 5, "");
-
-                if (!std::isupper(pname[0]))
-                    continue;
-
-                std::string extension;
-                auto back_ptr = pname.end();
-                while (std::isupper(*(back_ptr - 1)))
+                if (std::strcmp("match", matcher_rule.name()) == 0)
                 {
-                    extension = static_cast<char>(std::tolower(*(--back_ptr))) + extension;
+                    matcher m;
+                    m.command_expression = matcher_rule.attribute("command-expression").as_string(".*");
+                    m.param_expression = matcher_rule.attribute("param-expression").as_string("a^");
+                    m.enable_return = matcher_rule.attribute("enable-return").as_bool(false);
+                    m.tname = tname;
+                    type_matchers.push_back(m);
                 }
-
-                if (!extension.empty())
-                    extension = "_" + extension;
-
-                pname[0] = std::tolower(pname[0]);
-                for (auto it = pname.begin()+1; it != back_ptr; ++it)
-                {
-                    if (std::isupper(*it))
-                    {
-                        *it = std::tolower(*it);
-                        it = pname.insert(it, '_');
-                    }
-                }
-
-                std::string hnd(pname.begin(), back_ptr);
-                if (memcmp("ies", hnd.data() + hnd.length() - 3, 3) == 0)
-                    hnd.replace(hnd.end() - 3, hnd.end(), "y");
-
-                if (*(hnd.end() - 1) == 's')
-                    hnd = hnd.substr(0, hnd.size() - 1);
-
-                handle_types.emplace(hnd + extension);
             }
         }
     }
-    for (auto&& handle : handle_types)
-    {
-        file_types << "enum class gl_" << handle << "_t : uint32_t {};\n";
-    }
+
+
+
 
     file_enums << R"cpp(enum GLenum {
 )cpp";
@@ -291,6 +271,16 @@ This header contains all loaded extension definitions.
 constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
 {
     return GLenum(unsigned(lhs) | unsigned(rhs));
+}
+
+constexpr GLenum operator+(const GLenum lhs, const GLenum rhs)
+{
+    return GLenum(unsigned(lhs) + unsigned(rhs));
+}
+
+constexpr GLenum operator-(const GLenum lhs, const GLenum rhs)
+{
+    return GLenum(unsigned(lhs) - unsigned(rhs));
 })cpp";
 
 
@@ -310,14 +300,14 @@ constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
     //        file_enums << "};\n";
     //    }
     //}
-    
+
     std::map<std::string, std::string> type_param{
         {"buffer", "gl_buffer_t"},
         { "buffers", "gl_buffer_t" },
         { "framebuffer", "gl_framebuffer_t" },
         { "framebuffers", "gl_framebuffer_t" },
         { "fbos", "gl_framebuffer_t" },
-        { "drawFramebuffer", "gl_framebuffer_t" },
+        { "drawFramebuffer", "gl_framebuffer_t" }, 
         { "readFramebuffer", "gl_framebuffer_t" },
         { "texture", "gl_texture_t" },
         { "textures", "gl_texture_t" },
@@ -354,25 +344,20 @@ constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
         {
             if (std::strcmp(param.name(), "ptype") == 0)
             {
-                if (strcmp(proto.child("name").first_child().value(), "glGenPathsNV") == 0)
+                bool found = false;
+                std::string pt = proto.child("name").first_child().value();
+                for (auto&& match : type_matchers)
                 {
-                    file_functions << type_param["path"];
+                    if (match.enable_return && std::regex_match(pt, match.command_expression))
+                    {
+                        file_functions << match.tname;
+                        found = true; 
+                        break;
+                    }
                 }
-                else if (strcmp(proto.child("name").first_child().value(), "glCreateProgram") == 0)
+                const char* tname = param.first_child().value();
+                if (!found)
                 {
-                    file_functions << type_param["program"];
-                }
-                else if (strcmp(proto.child("name").first_child().value(), "glCreateShader") == 0)
-                {
-                    file_functions << type_param["shader"];
-                }
-                else if (strcmp(proto.child("name").first_child().value(), "glCreateShaderProgramv") == 0)
-                {
-                    file_functions << type_param["program"];
-                }
-                else
-                {
-                    const char* tname = param.first_child().value();
                     if (typedefs.count(tname) != 0)
                         file_functions << typedefs[tname];
                     else
@@ -408,35 +393,24 @@ constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
                 if (std::strcmp(param.name(), "ptype") == 0)
                 {
                     const char* tname = param.first_child().value();
-                    if (std::strcmp(tname, "GLuint") == 0)
+
+                    bool found = false;
+                    std::string pt = p.child("name").first_child().value();
+                    for (auto&& match : type_matchers)
                     {
-                        if (is_tf && (memcmp(p.child("name").first_child().value(), "id", 2) == 0 || strcmp(p.child("name").first_child().value(), "xfb") == 0))
+                        if (std::regex_match(pname, match.command_expression) && std::regex_match(pt, match.param_expression))
                         {
-                            file_functions << "gl_transform_feedback_t";
-                        }
-                        else if (is_query && (memcmp(p.child("name").first_child().value(), "id", 2) == 0))
-                        {
-                            file_functions << "gl_query_t";
-                        }
-                        else if (type_param.count(p.child("name").first_child().value()) != 0 && !(strcmp(p.child("name").first_child().value(), "buffer") == 0 && is_framebuffer))
-                        {
-                            file_functions << type_param[p.child("name").first_child().value()];
-                        }
-                        else
-                        {
-                            if (typedefs.count(tname) != 0)
-                                file_functions << typedefs[tname];
-                            else
-                                file_functions << tname;
+                            file_functions << match.tname;
+                            found = true;
+                            break;
                         }
                     }
-                    else
-                    {
+                    if (!found)
                         if (typedefs.count(tname) != 0)
                             file_functions << typedefs[tname];
                         else
                             file_functions << tname;
-                    }
+                    continue;
                 }
                 else if (std::strcmp(param.name(), "name") == 0)
                 {
@@ -448,9 +422,13 @@ constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
 
             first = false;
         }
-        file_functions << ");\n";
-
+#if __cpp_noexcept_function_type >= 201510
+        file_functions << ") noexcept;\n";
         file_functions_inl << "decltype(" << pname << ") " << pname << ";\n";
+#else
+        file_functions << ");\n";
+        file_functions_inl << "decltype(" << pname << ") " << pname << ";\n";
+#endif
     }
 
     file_functions << "\n#if defined(MYGL_IMPLEMENTATION)\n#include \"gl_functions.inl\"\n#endif\n";
