@@ -14,10 +14,10 @@
 #define stringize(X) #X
 
 int main(int argc, const char** argv)
-{
+{ 
     pugi::xml_document settings;
     settings.load_file(MYGL_SETTINGS_PATH);
-
+     
     pugi::xml_node platform = settings.child("mygl-generator").child("platform");
     pugi::xml_node exts = settings.child("mygl-generator").child("extensions");
     pugi::xml_node cmds = settings.child("mygl-generator").child("commands");
@@ -246,9 +246,6 @@ This header contains all loaded extension definitions.
             }
         }
     }
-
-
-
 
     file_enums << R"cpp(enum GLenum {
 )cpp";
