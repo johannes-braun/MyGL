@@ -121,18 +121,30 @@ This header contains all loaded extension definitions.
             }
             else
             {
+                if (!khrplatform && strcmp("khrplatform", type.attribute("requires").as_string("")) == 0)
+                    continue;
                 if (strcmp(type.child("name").first_child().value(), "GLenum") == 0)
                     continue;
                 if (strcmp(type.child("name").first_child().value(), "GLboolean") == 0)
                     continue;
                 val.replace(val.begin(), val.begin() + 8, "");
                 val.replace(val.end() - 1, val.end(), "");
-                typedefs.emplace(type.child("name").first_child().value(), val);
+                const char* name = type.child("name").first_child().value();
+
+                if (typedefs.count(val) != 0)
+                    typedefs.emplace(name, typedefs[val]);
+                else
+                    typedefs.emplace(name, val);
             }
         }
     }
     typedefs["GLboolean"] = "bool";
     typedefs.erase("GLbitfield");
+
+    for (const auto& [name, type] : typedefs)
+    {
+        file_types << "using " << name << " = " << type << ";\n";
+    }
 
     for (pugi::xml_node feature : registry.children("feature"))
     {
@@ -431,7 +443,7 @@ constexpr GLenum operator-(const GLenum lhs, const GLenum rhs)
     file_functions << "\n#if defined(MYGL_IMPLEMENTATION)\n#include \"gl_functions.inl\"\n#endif\n";
 
     file_loader << "#include \"gl_functions.hpp\"\n\n";
-    file_loader << "void mygl_load_gl();\n";
+    file_loader << "namespace mygl { void load(); }\n";
     file_loader << "\n#if defined(MYGL_IMPLEMENTATION)\n#include \"gl_loader.inl\"\n#endif";
 
     file_loader_inl << R"cpp(
@@ -517,12 +529,12 @@ namespace {
 }
 )cpp";
 
-    file_loader_inl << "\nvoid mygl_load_gl() {\n";
+    file_loader_inl << "\nnamespace mygl {\nvoid load() {\n";
     for (auto&& command : commands)
     {
         file_loader_inl << "    " << command << " = reinterpret_cast<decltype(" << command << ")>(__get_gl_func(\"" << command << "\"));\n";
     }
-    file_loader_inl << "}\n";
+    file_loader_inl << "}\n}\n";
 
     return 0;
 }
