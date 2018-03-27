@@ -141,9 +141,9 @@ This header contains all loaded extension definitions.
     typedefs["GLboolean"] = "bool";
     typedefs.erase("GLbitfield");
 
-    for (const auto& [name, type] : typedefs)
+    for (const auto& pair : typedefs)
     {
-        file_types << "using " << name << " = " << type << ";\n";
+        file_types << "using " << pair.first << " = " << pair.second << ";\n";
     }
 
     for (pugi::xml_node feature : registry.children("feature"))
