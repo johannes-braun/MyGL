@@ -1,0 +1,32 @@
+{
+  "environments": [
+    {
+      "buildPath": "${workspaceRoot}\\.vsbuild\\${name}"
+    }
+  ], 
+  // Informationen zu dieser Datei finden Sie unter https://go.microsoft.com//fwlink//?linkid=834763.
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.buildPath}",
+      "installRoot": "${env.buildPath}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": ""
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.buildPath}",
+      "installRoot": "${env.buildPath}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": ""
+    }
+  ]
+}

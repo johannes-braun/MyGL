@@ -1,5 +1,6 @@
 bin
-.vs
+build
+.vs*
 external
 include
 res/gl.xml
