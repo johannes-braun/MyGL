@@ -6,6 +6,7 @@
     <extension>GL_ARB_direct_state_access</extension>
     <extension>GL_ARB_compute_variable_group_size</extension>
     <extension>GL_ARB_vertex_attrib_binding</extension>
+    <extension>GL_ARB_gpu_shader_int64</extension>
     <extension>GL_EXT_texture_filter_anisotropic</extension>
     <extension>GL_KHR_debug</extension>
     <extension>GL_NVX_gpu_memory_info</extension>
@@ -17,43 +18,48 @@
     <extension>GL_NV_shader_buffer_store</extension>
     <extension>GL_NV_uniform_buffer_unified_memory</extension>
     <extension>GL_NV_vertex_buffer_unified_memory</extension>
+    <extension>GL_NV_gpu_program5</extension>
+    <extension>GL_NV_gpu_shader5</extension>
+    <extension>GL_NV_compute_program5</extension>
+    <extension>GL_NV_gpu_program5_mem_extended</extension>
   </extensions>
   <commands>
     <command>glEnableClientState</command>
     <command>glDisableClientState</command>
+    <command>glDrawTextureNV</command>
   </commands>
   <rules>
-    
+
     <handle-rule typename="gl_buffer_t" type="uint32_t">
       <match param-expression="(readB|writeB|b)uffer(s|)" command-expression="((?!Framebuffer).)*"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_shader_program_t" type="uint32_t">
       <match param-expression="program(s|)"/>
       <match enable-return="true" command-expression="glCreate(Shader|)Program.*"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_shader_t" type="uint32_t">
       <match param-expression="shader(s|)"/>
       <match enable-return="true" command-expression="glCreateShader"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_query_t" type="uint32_t">
       <match command-expression="gl.*Quer(y|ies).*" param-expression="id(s|)"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_framebuffer_t" type="uint32_t">
       <match param-expression="((readF|drawF|f)ramebuffer(s|)|fbos)"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_texture_t" type="uint32_t">
       <match param-expression="texture(s|)"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_renderbuffer_t" type="uint32_t">
       <match param-expression="renderbuffer(s|)"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_sampler_t" type="uint32_t">
       <match param-expression="sampler(s|)"/>
     </handle-rule>
@@ -61,7 +67,7 @@
     <handle-rule typename="gl_program_pipeline_t" type="uint32_t">
       <match param-expression="pipeline(s|)"/>
     </handle-rule>
-    
+
     <handle-rule typename="gl_vertex_array_t" type="uint32_t">
       <match param-expression="array(s|)" command-expression=".*VertexArray.*"/>
       <match param-expression="vaobj"/>
@@ -83,20 +89,6 @@
     <handle-rule typename="gl_transform_feedback_t" type="uint32_t">
       <match command-expression=".*TransformFeedback.*" param-expression="(id(s|)|xfb)"/>
     </handle-rule>
-    
+
   </rules>
 </mygl-generator>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
