@@ -14,6 +14,7 @@ set(SOURCE_CPP
     ${SOURCE_DIR}/gen/loader.cpp
     ${SOURCE_DIR}/gen/settings.cpp
     ${SOURCE_DIR}/gen/types.cpp
+    ${SOURCE_DIR}/gen/interface.cpp
 )
 add_executable(mygl_gen ${SOURCE_CPP})
 set_target_properties(mygl_gen PROPERTIES LINKER_LANGUAGE CXX)

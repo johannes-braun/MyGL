@@ -81,6 +81,8 @@ int  main(int argc, const char** argv)
     files::write_commands(s, output_folder_path, infos);
     std::cout << "---- Writing loader...\n";
     files::write_loader(s, output_folder_path);
+    std::cout << "---- Writing interface...\n";
+    files::write_interface(s, output_folder_path);
     std::cout << "-- OpenGL loader generation finished\n";
 
     return 0;

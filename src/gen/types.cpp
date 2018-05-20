@@ -84,7 +84,7 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
         file_types << "namespace " << rules_namespace << "{\n";
 
     const char* indent = rules_namespace ? "    " : "";
-
+    const std::string namesp = rules_namespace ? rules_namespace + std::string("::") : "";
     for(pugi::xml_node rule : rules)
     {
         if(std::strcmp(rule.name(), "handle-rule") == 0)
@@ -103,7 +103,7 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
                             matcher_rule.attribute("command-expression").as_string(".*");
                     m.param_expression = matcher_rule.attribute("param-expression").as_string("a^");
                     m.enable_return    = matcher_rule.attribute("enable-return").as_bool(false);
-                    m.tname            = tname;
+                    m.tname            = namesp + tname;
                     infos.type_matchers.push_back(m);
                 }
             }

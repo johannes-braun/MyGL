@@ -9,9 +9,9 @@ constexpr const char* file_functions_info = R"(#pragma once
 #include "mygl_types.hpp"
 
 #if __cpp_noexcept_function_type >= 201510
-    MYGL_NOEXCEPT noexcept
+#   define MYGL_NOEXCEPT noexcept
 #else
-    MYGL_NOEXCEPT
+#   define MYGL_NOEXCEPT
 #endif
 )";
 

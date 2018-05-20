@@ -30,4 +30,5 @@ void      write_extensions(const gen::settings& settings, const std::filesystem:
 void      write_commands(const gen::settings& settings, const std::filesystem::path& install_dir,
                          const typeinfos& infos);
 void      write_loader(const gen::settings& settings, const std::filesystem::path& install_dir);
+void      write_interface(const gen::settings& settings, const std::filesystem::path& install_dir);
 }
