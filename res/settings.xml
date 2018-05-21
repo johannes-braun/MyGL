@@ -53,6 +53,7 @@
 
     <handle-rule typename="texture" type="uint32_t">
       <match param-expression="texture(s|)"/>
+      <match command-expression="glTextureView" param-expression="origtexture"/>
     </handle-rule>
 
     <handle-rule typename="renderbuffer" type="uint32_t">
