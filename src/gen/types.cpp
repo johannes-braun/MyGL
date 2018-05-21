@@ -12,6 +12,7 @@ INFO: the GLenum type is defined externally in mygl_enums.hpp.
 
 #include "mygl_enums.hpp"
 #include <cinttypes>
+#include <type_traits>
 )";
 
 typeinfos write_types(const gen::settings& settings, const std::filesystem::path& install_dir)
@@ -91,8 +92,26 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
         {
             const std::string tname = rule.attribute("typename").as_string();
             const std::string type  = rule.attribute("type").as_string();
-
+            
             file_types << indent << "enum class " << tname << " : " << type << " { zero = 0 };\n";
+            /*file_types << indent << "struct " << tname << " {\n" << indent << "public:\n";
+            file_types << indent << "    constexpr static " << tname << " zero;\n";
+            file_types << indent << "    constexpr " << tname << "() = default;\n";
+            file_types << indent << "    constexpr " << tname << "(const " << tname << "&) = default;\n";
+            file_types << indent << "    constexpr " << tname << "(" << tname << "&&) = default;\n";
+            file_types << indent << "    constexpr " << tname << "& operator=(const " << tname << "&) = default;\n";
+            file_types << indent << "    constexpr " << tname << "& operator=(" << tname << "&&) = default;\n";
+            file_types << indent << "    ~" << tname << "() = default;\n";
+            file_types << indent << "    template<typename T, typename = std::enable_if_t<!std::is_same_v<T, "<<tname<<"> && std::is_convertible_v<T, "<<type<<">>>\n";
+            file_types << indent << "    explicit constexpr " << tname << "(const T& id) : _id(static_cast<"<<type<<">(id)) {}\n";
+            file_types << indent << "    template<typename T, typename = std::enable_if_t<!std::is_same_v<T, "<<tname<<"> && std::is_convertible_v<T, "<<type<<">>>\n";
+            file_types << indent << "    explicit constexpr operator T() const noexcept { return static_cast<T>(_id); }\n";
+            file_types << indent << "    friend constexpr bool operator ==(const " << tname << "& lhs, const " << tname << "& rhs) noexcept;\n";
+            file_types << indent << "    friend constexpr bool operator !=(const " << tname << "& lhs, const " << tname << "& rhs) noexcept;\n";
+            file_types << indent << "private:\n    " << indent << type << " _id = 0;\n" << indent << "};\n";
+            file_types << indent << "constexpr bool operator ==(const " << tname << "& lhs, const " << tname << "& rhs) noexcept { return lhs._id == rhs._id; }\n";
+            file_types << indent << "constexpr bool operator !=(const " << tname << "& lhs, const " << tname << "& rhs) noexcept { return lhs._id != rhs._id; }\n";
+            file_types << indent << '\n';*/
 
             for(pugi::xml_node matcher_rule : rule)
             {
