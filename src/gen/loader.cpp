@@ -68,7 +68,7 @@ private:
 #endif
     }
 
-    void* (*get_fun)(const char*) = nullptr;
+    void* (APIENTRY *get_fun)(const char*) = nullptr;
 
 #ifdef __APPLE__
     constexpr static std::array<const char *, 4> libs = {
