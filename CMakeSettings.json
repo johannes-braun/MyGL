@@ -4,7 +4,6 @@
       "buildPath": "${workspaceRoot}\\.vsbuild\\${name}"
     }
   ], 
-  // Informationen zu dieser Datei finden Sie unter https://go.microsoft.com//fwlink//?linkid=834763.
   "configurations": [
     {
       "name": "x64-Debug",
@@ -14,7 +13,7 @@
       "buildRoot": "${env.buildPath}",
       "installRoot": "${env.buildPath}",
       "cmakeCommandArgs": "",
-      "buildCommandArgs": "-v",
+      "buildCommandArgs": "",
       "ctestCommandArgs": ""
     },
     {
@@ -25,7 +24,7 @@
       "buildRoot": "${env.buildPath}",
       "installRoot": "${env.buildPath}",
       "cmakeCommandArgs": "",
-      "buildCommandArgs": "-v",
+      "buildCommandArgs": "",
       "ctestCommandArgs": ""
     }
   ]

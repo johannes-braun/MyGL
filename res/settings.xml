@@ -7,13 +7,20 @@
     <extension>GL_ARB_compute_variable_group_size</extension>
     <extension>GL_ARB_vertex_attrib_binding</extension>
     <extension>GL_ARB_gpu_shader_int64</extension>
+
     <extension>GL_EXT_texture_filter_anisotropic</extension>
+    <extension>GL_EXT_polygon_offset_clamp</extension>
+    <extension>GL_EXT_depth_bounds_test</extension>
+
     <extension>GL_KHR_debug</extension>
+
     <extension>GL_NVX_gpu_memory_info</extension>
+
     <extension>GL_NV_bindless_multi_draw_indirect</extension>
     <extension>GL_NV_bindless_multi_draw_indirect_count</extension>
     <extension>GL_NV_command_list</extension>
     <extension>GL_NV_path_rendering</extension>
+    <extension>GL_NV_draw_texture</extension>
     <extension>GL_NV_shader_buffer_load</extension>
     <extension>GL_NV_shader_buffer_store</extension>
     <extension>GL_NV_uniform_buffer_unified_memory</extension>
@@ -26,7 +33,6 @@
   <commands>
     <command>glEnableClientState</command>
     <command>glDisableClientState</command>
-    <command>glDrawTextureNV</command>
   </commands>
   <rules namespace="mygl">
     <handle-rule typename="buffer" type="uint32_t">
