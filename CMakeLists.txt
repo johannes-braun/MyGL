@@ -19,7 +19,7 @@ set(SOURCE_CPP
 add_executable(mygl_gen ${SOURCE_CPP})
 set_target_properties(mygl_gen PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(mygl_gen PROPERTIES CXX_STANDARD 17)
-if(UNIX)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     target_link_libraries(mygl_gen stdc++fs)
 endif()
 

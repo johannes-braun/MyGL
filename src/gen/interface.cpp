@@ -37,7 +37,11 @@ mygl::load(reinterpret_cast<mygl::loader_function>(myGetProcAddress));
     void write_interface(const gen::settings& settings, const std::filesystem::path& install_dir)
     {
         std::ofstream file_interface(install_dir / "mygl/mygl.hpp");
-
         file_interface << interface_info;
+
+        std::ofstream face_interface_static(install_dir / "mygl/mygl.cpp");
+        face_interface_static << R"(#define MYGL_IMPLEMENTATION
+#include "mygl.hpp"
+        )";
     }
 }

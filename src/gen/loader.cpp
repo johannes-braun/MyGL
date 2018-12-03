@@ -12,6 +12,8 @@ namespace mygl {
 using loader_function = void*(*)(const char* name);
 void load();
 void load(loader_function fun);
+void load(dispatch* d)
+void load(dispatch* d, loader_function fun)
 }
 
 #if defined(MYGL_IMPLEMENTATION)
@@ -106,16 +108,27 @@ namespace {
 )";
 
 constexpr const char* loading_functions = R"(
-void load()
+
+void load(dispatch* d)
 {
     function_loader loader;
     load_impl(loader);
 }
 
-void load(loader_function fun)
+void load(dispatch* d, loader_function fun)
 {
     function_loader loader(fun);
     load_impl(loader);
+}
+
+void load()
+{
+    load(get_current_dispatch());
+}
+
+void load(loader_function fun)
+{
+    load(get_current_dispatch(), fun);
 }
 )";
 
@@ -127,11 +140,11 @@ void write_loader(const gen::settings& settings, const std::filesystem::path& in
     file_loader << file_loader_info;
     file_loader_inl << file_loader_code;
 
-    file_loader_inl << "\n    void load_impl(function_loader& loader) {\n";
+    file_loader_inl << "\n    void load_impl(dispatch* d, function_loader& loader) {\n";
     for(auto&& command : settings.commands)
     {
-        file_loader_inl << "        " << command << " = reinterpret_cast<decltype(" << command
-                        << ")>(loader.get(\"" << command << "\"));\n";
+        file_loader_inl << "        d->" << command << " = reinterpret_cast<decltype(" << command
+                        << ")*>(loader.get(\"" << command << "\"));\n";
     }
     file_loader_inl << "    }\n}";
 
