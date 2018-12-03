@@ -17,10 +17,9 @@ struct matcher
     std::string tname;
     bool        enable_return = false;
 };
-using typedef_map = std::unordered_map<std::string, std::string>;
 struct typeinfos
 {
-    typedef_map          typedefs;
+    gen::typedef_map          typedefs;
     std::vector<matcher> type_matchers;
 };
 

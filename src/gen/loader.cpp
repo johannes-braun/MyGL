@@ -9,11 +9,10 @@ constexpr const char* file_loader_info = R"(#pragma once
 #include "mygl_functions.hpp"
 
 namespace mygl { 
-using loader_function = void*(*)(const char* name);
 void load();
 void load(loader_function fun);
-void load(dispatch* d)
-void load(dispatch* d, loader_function fun)
+void load(dispatch* d);
+void load(dispatch* d, loader_function fun);
 }
 
 #if defined(MYGL_IMPLEMENTATION)
@@ -112,23 +111,23 @@ constexpr const char* loading_functions = R"(
 void load(dispatch* d)
 {
     function_loader loader;
-    load_impl(loader);
+    load_impl(d, loader);
 }
 
 void load(dispatch* d, loader_function fun)
 {
     function_loader loader(fun);
-    load_impl(loader);
+    load_impl(d, loader);
 }
 
 void load()
 {
-    load(get_current_dispatch());
+    load(&get_static_dispatch());
 }
 
 void load(loader_function fun)
 {
-    load(get_current_dispatch(), fun);
+    load(&get_static_dispatch(), fun);
 }
 )";
 
@@ -143,7 +142,13 @@ void write_loader(const gen::settings& settings, const std::filesystem::path& in
     file_loader_inl << "\n    void load_impl(dispatch* d, function_loader& loader) {\n";
     for(auto&& command : settings.commands)
     {
-        file_loader_inl << "        d->" << command << " = reinterpret_cast<decltype(" << command
+        std::string fun_name = command;
+        if (!settings.dispatch_options.keep_prefix)
+            fun_name.erase(0, 2);
+        if (!settings.dispatch_options.start_caps)
+            fun_name[0] = std::tolower(fun_name[0], std::locale{});
+
+        file_loader_inl << "        d->" << fun_name << " = reinterpret_cast<decltype(::" << command
                         << ")*>(loader.get(\"" << command << "\"));\n";
     }
     file_loader_inl << "    }\n}";

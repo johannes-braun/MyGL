@@ -53,8 +53,10 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
     std::ofstream file_types(absolute(install_dir) / "mygl/mygl_types.hpp");
     file_types << file_types_info;
 
-    typedef_map function_pointer_types;
-    infos.typedefs["GLboolean"] = "bool";
+    gen::typedef_map function_pointer_types;
+    for (auto& rep : settings.type_replacements)
+        infos.typedefs.emplace(rep.first, rep.second);
+    infos.typedefs.emplace("GLboolean", "bool");
     for(pugi::xml_node type : settings.opengl_xml.child("registry").child("types").children("type"))
     {
         std::string val = type.first_child().value();
@@ -64,7 +66,9 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
             for (auto& c : val)
                 if (c == '<' || c == '>')
                     c = '\"';
+            file_types << "#if __has_include(\"KHR/khrplatform.h\")\n";
             file_types << val;
+            file_types << "\n#endif\n";
         }
         else if(memcmp(val.data(), "typedef", 7) == 0)
         {
@@ -85,7 +89,6 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
                         {
                             strm << " (*) ";
                             // Space commas out a bit
-                            
                             for(auto sit = std::next(valx.begin()); sit != std::prev(valx.end()); ++sit)
                             {
                                 strm << *sit;
@@ -107,9 +110,9 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
                 if(!settings.use_khr &&
                    strcmp("khrplatform", type.attribute("requires").as_string("")) == 0)
                     continue;
-                if(strcmp(type.child("name").first_child().value(), "GLenum") == 0)
+                if(strcmp(type.child("name").first_child().value(), "GLenum") == 0 && settings.type_replacements.count("GLenum") == 0)
                     continue;
-                if(strcmp(type.child("name").first_child().value(), "GLboolean") == 0)
+                if(strcmp(type.child("name").first_child().value(), "GLboolean") == 0 && settings.type_replacements.count("GLboolean") == 0)
                     continue;
 
                 val.replace(val.begin(), val.begin() + 8, "");
@@ -124,18 +127,35 @@ typeinfos write_types(const gen::settings& settings, const std::filesystem::path
             }
         }
     }
-    infos.typedefs.erase("GLbitfield");
+    if(settings.type_replacements.count("GLbitfield") == 0)
+        infos.typedefs.erase("GLbitfield");
 
+#if defined(MYGL_PRINT_TYPEDEFS)
     file_types << "\n//Define a couple of GL types for compatibility.\n";
     for(const auto& pair : infos.typedefs)
     {
         file_types << "using " << pair.first << " = " << pair.second << ";\n";
     }
+#endif
+
     file_types << "\n//All internal function pointer types\n";
-    for(const auto& pair : function_pointer_types)
+    for(auto& pair : function_pointer_types)
     {
+        char* it = &pair.second[0];
+        while(*it++)
+        {
+            for(auto& p : infos.typedefs)
+                if(memcmp(p.first.c_str(), it, p.first.length()) == 0)
+                {
+                    const auto rep_begin = std::distance(&pair.second[0], it);
+                    pair.second.replace(rep_begin, p.first.length(), p.second);
+                    it = &pair.second[rep_begin + p.first.length()];
+                    break;
+                }
+        }
+
         file_types << "using " << pair.first << " = " << pair.second << ";\n";
-    }
+    } 
 
     pugi::xml_node rules           = settings.settings_xml.child("mygl-generator").child("rules");
     const char*    rules_namespace = rules.attribute("namespace").as_string(nullptr);

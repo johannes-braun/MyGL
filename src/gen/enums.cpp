@@ -10,8 +10,13 @@ constexpr const char* file_enums_info = R"(#pragma once
 
 void write_enums(const gen::settings& settings, const std::filesystem::path& install_dir)
 {
+    const auto type_it = settings.type_replacements.find("GLenum");
+    const auto bitf_it = settings.type_replacements.find("GLbitfield");
+    std::string glenum_name = type_it == settings.type_replacements.end() ? "GLenum" : type_it->second;
+    std::string glbitfield_name = bitf_it == settings.type_replacements.end() ? "GLbitfield" : bitf_it->second;
+
     std::ofstream file_enums(absolute(install_dir) / "mygl/mygl_enums.hpp");
-    file_enums << file_enums_info << "enum GLenum {\n";
+    file_enums << file_enums_info << "enum " << glenum_name << " {\n";
     for(pugi::xml_node enums_node : settings.opengl_xml.child("registry"))
     {
         bool has = false;
@@ -28,21 +33,34 @@ void write_enums(const gen::settings& settings, const std::filesystem::path& ins
     }
     file_enums << R"cpp(};
 )cpp";
-    file_enums << "using GLbitfield = GLenum;";
+    file_enums << "using " << glbitfield_name << " = "<< glenum_name <<";\n";
+    file_enums << "namespace { using glenum_type = " << glenum_name << "; }";
     file_enums << R"cpp(
-constexpr GLenum operator|(const GLenum lhs, const GLenum rhs)
+constexpr glenum_type operator|(const glenum_type lhs, const glenum_type rhs)
 {
-    return GLenum(unsigned(lhs) | unsigned(rhs));
+    return glenum_type(unsigned(lhs) | unsigned(rhs));
+}
+constexpr glenum_type operator&(const glenum_type lhs, const glenum_type rhs)
+{
+    return glenum_type(unsigned(lhs) & unsigned(rhs));
+}
+constexpr glenum_type operator^(const glenum_type lhs, const glenum_type rhs)
+{
+    return glenum_type(unsigned(lhs) ^ unsigned(rhs));
 }
 
-constexpr GLenum operator+(const GLenum lhs, const GLenum rhs)
+#if defined(MYGL_DEFINE_GLENUM_ARITHMETIC)
+constexpr glenum_type operator+(const glenum_type lhs, const glenum_type rhs)
 {
-    return GLenum(unsigned(lhs) + unsigned(rhs));
+    return glenum_type(unsigned(lhs) + unsigned(rhs));
 }
 
-constexpr GLenum operator-(const GLenum lhs, const GLenum rhs)
+constexpr glenum_type operator-(const glenum_type lhs, const glenum_type rhs)
 {
-    return GLenum(unsigned(lhs) - unsigned(rhs));
-})cpp";
+    return glenum_type(unsigned(lhs) - unsigned(rhs));
+}
+#endif // MYGL_DEFINE_GLENUM_ARITHMETIC
+
+)cpp";
 }
 }

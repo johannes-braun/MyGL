@@ -1,6 +1,7 @@
 #include "gen/files.hpp"
 
 #include <iostream>
+#include <fstream>
 
 constexpr const char* help_text = R"(
  __  __  _  _  ___  __   
@@ -61,6 +62,12 @@ int  main(int argc, const char** argv)
             std::cerr << "Malformed Argument list. Options should start with a dash (-).";
             break;
         }
+    }
+
+    {
+        std::ifstream settings_in(settings_file_path);
+        std::ofstream settings_out(output_folder_path / "mygl" / settings_file_path.filename());
+        settings_out << settings_in.rdbuf();
     }
 
     std::cout << "-- Settings from " << settings_file_path << "\n";

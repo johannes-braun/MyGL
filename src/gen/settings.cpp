@@ -13,6 +13,8 @@ settings::settings(const std::filesystem::path& settings_xml_path,
     pugi::xml_node exts     = gen.child("extensions");
     pugi::xml_node cmds     = gen.child("commands");
     pugi::xml_node platform = gen.child("platform");
+    pugi::xml_node typedefs = gen.child("typedefs");
+    pugi::xml_node general  = gen.child("general");
 
     if(platform.first_child().value() == "compat"sv)
         gl_profile = profile::compat;
@@ -25,6 +27,11 @@ settings::settings(const std::filesystem::path& settings_xml_path,
         enabled_extensions.emplace(e.first_child().value());
     for(pugi::xml_node c : cmds.children("command"))
         additional_commands.emplace(c.first_child().value());
+
+    for (pugi::xml_node rep : typedefs.children("typedef"))
+    {
+        type_replacements[rep.attribute("for").as_string("")] = rep.attribute("as").as_string("");
+    }
 
     opengl_xml.load_file(opengl_xml_path.c_str());
 
@@ -102,5 +109,9 @@ settings::settings(const std::filesystem::path& settings_xml_path,
             }
         }
     }
+
+    pugi::xml_node dispatch = general.child("dispatch");
+    dispatch_options.keep_prefix = dispatch.child("keep-prefix").attribute("value").as_bool(false);
+    dispatch_options.start_caps = dispatch.child("start-caps").attribute("value").as_bool(false);
 }
 }

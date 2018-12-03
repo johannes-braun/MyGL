@@ -2,10 +2,12 @@
 #include "../pugixml.hpp"
 #include <filesystem>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace gen
 {
 using string_set = std::unordered_set<std::string>;
+using typedef_map = std::unordered_map<std::string, std::string>;
 enum class profile
 {
     core,
@@ -25,5 +27,11 @@ public:
     pugi::xml_document opengl_xml;
     string_set         enums;
     string_set         commands;
+    typedef_map        type_replacements;
+    struct
+    {
+        bool keep_prefix;
+        bool start_caps;
+    } dispatch_options;
 };
 }

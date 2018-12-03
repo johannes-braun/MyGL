@@ -1,5 +1,6 @@
 #include "files.hpp"
 #include <fstream>
+#include <sstream>
 
 namespace files
 {
@@ -25,9 +26,35 @@ void write_commands(const gen::settings& settings, const std::filesystem::path& 
 
     file_functions << file_functions_info;
     file_functions_inl << "#pragma once\n";
+    file_functions_inl
+        <<
+        R"(
+namespace mygl
+{
+    void load(dispatch* d);
+    void load(dispatch* d, loader_function fun);
+
+    dispatch::dispatch(bool load)
+    {
+        if(load) mygl::load(this);
+    }
+
+    dispatch::dispatch(loader_function loader)
+    {
+        mygl::load(this, loader);
+    }
+    namespace { mygl::dispatch static_dispatch; }
+    mygl::dispatch& get_static_dispatch() noexcept
+    {
+        return static_dispatch;
+    }
+}
+)";
 
     std::stringstream file_context;
-    file_context << "\nnamespace mygl {\nstruct dispatch {\n";
+    file_context << "\nnamespace mygl {\n"
+        "using loader_function = void*(*)(const char* name);\n"
+        "struct dispatch {\n";
 
     pugi::xml_node commands_node = settings.opengl_xml.child("registry")
                                            .find_child_by_attribute("commands", "namespace", "GL");
@@ -85,8 +112,13 @@ void write_commands(const gen::settings& settings, const std::filesystem::path& 
 
         bool first = true;
 
+        std::string fun_name = pname;
+        if (!settings.dispatch_options.keep_prefix)
+            fun_name.erase(0, 2);
+        if (!settings.dispatch_options.start_caps)
+            fun_name[0] = std::tolower(fun_name[0], std::locale{});
         std::stringstream call;
-        call << "return get_current_dispatch()->" << pname << "(";
+        call << "return mygl::get_static_dispatch()." << fun_name << "(";
         for(auto&& p : c.children("param"))
         {
             if(!first)
@@ -139,7 +171,7 @@ void write_commands(const gen::settings& settings, const std::filesystem::path& 
                 {
                     file_functions << param.value();
                     file_functions_inl << param.value();
-                    call << param.value();
+                    //call << param.value();
                 }
             }
 
@@ -148,51 +180,13 @@ void write_commands(const gen::settings& settings, const std::filesystem::path& 
         file_functions << ") MYGL_NOEXCEPT;\n";
         file_functions_inl << ") MYGL_NOEXCEPT { " << call.str() << "); }\n";
 
-        file_context << "    decltype(::" << pname << ")* " << pname << " = nullptr;\n";
+        file_context << "    decltype(::" << pname << ")* " << fun_name << " = nullptr;\n";
     }
 
-    file_functions_inl << R"(
-namespace mygl {
-namespace {
-    inline static dispatch  static_dispatch;
-    dispatch* current_dispatch = &static_dispatch;
-}
-
-dispatch* create_dispatch()
-{
-    return new dispatch;
-}
-
-void destroy_dispatch(dispatch* d)
-{
-    delete d;
-}
-
-dispatch* get_current_dispatch()
-{
-    return current_dispatch;
-}
-
-void set_current_dispatch(dispatch* d)
-{
-    current_dispatch = d;
-}
-
-void dispatch_deleter::operator()(dispatch* d)
-{ 
-    set_current_dispatch(&static_dispatch); 
-    destroy_dispatch(d); 
-}
-
-unique_dispatch create_dispatch()
-{
-    return unique_dispatch{create_dispatch()};
-}
-}
-    )";
-
     file_context << R"(
-    dispatch() = default;
+    dispatch(bool load = false);
+    dispatch(loader_function loader);
+
     dispatch(const dispatch&) = delete;
     dispatch(dispatch&&) = default;
     dispatch& operator=(const dispatch&) = delete;
@@ -201,19 +195,6 @@ unique_dispatch create_dispatch()
 )";
 
     file_context << "};\n"
-        << 
-            "dispatch* create_dispatch();\n"
-            "void destroy_dispatch(dispatch* d);\n"
-            "dispatch* get_current_dispatch();\n"
-            "void set_current_dispatch(dispatch* d);\n"
-
-        R"(
-struct dispatch_deleter {
-    void operator()(dispatch* d) const;
-};
-using unique_dispatch = std::unique_ptr<dispatch, dispatch_deleter>;
-unique_dispatch create_dispatch_unique();
-)"
         "} // mygl\n";
     file_functions << file_context.str();
     file_functions

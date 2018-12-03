@@ -1,6 +1,12 @@
 
 <mygl-generator>
   <platform use-khr="true">core</platform>
+  <general>
+    <dispatch>
+      <keep-prefix value="false"/>
+      <start-caps  value="false"/>
+    </dispatch>
+  </general>
   <extensions>
     <extension>GL_ARB_bindless_texture</extension>
     <extension>GL_ARB_direct_state_access</extension>
@@ -41,66 +47,91 @@
     <command>glDisableClientState</command>
   </commands>
   <rules namespace="mygl">
-    <handle-rule typename="buffer" type="uint32_t">
+    <handle-rule typename="buffer" type="std::uint32_t">
       <match param-expression="(readB|writeB|b)uffer(s|)" command-expression="((?!Framebuffer).)*"/>
     </handle-rule>
 
-    <handle-rule typename="shader_program" type="uint32_t">
+    <handle-rule typename="shader_program" type="std::uint32_t">
       <match param-expression="program(s|)"/>
       <match enable-return="true" command-expression="glCreate(Shader|)Program.*"/>
     </handle-rule>
 
-    <handle-rule typename="shader" type="uint32_t">
+    <handle-rule typename="shader" type="std::uint32_t">
       <match param-expression="shader(s|)"/>
       <match enable-return="true" command-expression="glCreateShader"/>
     </handle-rule>
 
-    <handle-rule typename="query" type="uint32_t">
+    <handle-rule typename="query" type="std::uint32_t">
       <match command-expression="gl.*Quer(y|ies).*" param-expression="id(s|)"/>
     </handle-rule>
 
-    <handle-rule typename="framebuffer" type="uint32_t">
+    <handle-rule typename="framebuffer" type="std::uint32_t">
       <match param-expression="((readF|drawF|f)ramebuffer(s|)|fbos)"/>
     </handle-rule>
 
-    <handle-rule typename="texture" type="uint32_t">
+    <handle-rule typename="texture" type="std::uint32_t">
       <match param-expression="texture(s|)"/>
       <match command-expression="glTextureView" param-expression="origtexture"/>
     </handle-rule>
 
-    <handle-rule typename="renderbuffer" type="uint32_t">
+    <handle-rule typename="renderbuffer" type="std::uint32_t">
       <match param-expression="renderbuffer(s|)"/>
     </handle-rule>
 
-    <handle-rule typename="sampler" type="uint32_t">
+    <handle-rule typename="sampler" type="std::uint32_t">
       <match param-expression="sampler(s|)"/>
     </handle-rule>
 
-    <handle-rule typename="pipeline" type="uint32_t">
+    <handle-rule typename="pipeline" type="std::uint32_t">
       <match param-expression="pipeline(s|)"/>
     </handle-rule>
 
-    <handle-rule typename="vertex_array" type="uint32_t">
+    <handle-rule typename="vertex_array" type="std::uint32_t">
       <match param-expression="array(s|)" command-expression=".*VertexArray.*"/>
       <match param-expression="vaobj"/>
     </handle-rule>
 
-    <handle-rule typename="command_list" type="uint32_t">
+    <handle-rule typename="command_list" type="std::uint32_t">
       <match param-expression="list(s|)"/>
     </handle-rule>
 
-    <handle-rule typename="state" type="uint32_t">
+    <handle-rule typename="state" type="std::uint32_t">
       <match param-expression="state(s|)"/>
     </handle-rule>
 
-    <handle-rule typename="path" type="uint32_t">
+    <handle-rule typename="path" type="std::uint32_t">
       <match param-expression="(path(s|)|firstPathName|pathBase|resultPath|srcPath)"/>
       <match enable-return="true" command-expression="glGenPathsNV"/>
     </handle-rule>
 
-    <handle-rule typename="transform_feedback" type="uint32_t">
+    <handle-rule typename="transform_feedback" type="std::uint32_t">
       <match command-expression=".*TransformFeedback.*" param-expression="(id(s|)|xfb)"/>
     </handle-rule>
 
+    <handle-rule typename="sync" type="std::uint64_t">
+      <match param-expression="sync"/>
+      <match enable-return="true" command-expression="glFenceSync"/>
+    </handle-rule>
+
   </rules>
+  <typedefs>
+    <typedef for="khronos_float_t" as="float"/>
+    <typedef for="khronos_intptr_t" as="std::intptr_t"/>
+    <typedef for="khronos_uintptr_t" as="std::uintptr_t"/>
+    <typedef for="khronos_int8_t" as="std::int8_t"/>
+    <typedef for="khronos_uint8_t" as="std::uint8_t"/>
+    <typedef for="khronos_int16_t" as="std::int16_t"/>
+    <typedef for="khronos_uint16_t" as="std::uint16_t"/>
+    <typedef for="khronos_int32_t" as="std::int32_t"/>
+    <typedef for="khronos_uint32_t" as="std::uint32_t"/>
+    <typedef for="khronos_int64_t" as="std::int64_t"/>
+    <typedef for="khronos_uint64_t" as="std::uint64_t"/>
+    <typedef for="khronos_ssize_t" as="std::int64_t"/>
+    <typedef for="khronos_usize_t" as="std::uint64_t"/>
+    <typedef for="unsigned int" as="std::uint32_t"/>
+    <typedef for="int" as="std::int32_t"/>
+
+    <typedef for="GLenum" as="gl_enum"/>
+    <typedef for="GLbitfield" as="gl_bitfield"/>
+  </typedefs>
 </mygl-generator>
