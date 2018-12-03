@@ -9,7 +9,9 @@ constexpr const char* file_loader_info = R"(#pragma once
 #include "mygl_functions.hpp"
 
 namespace mygl { 
-    void load(); 
+using loader_function = void*(*)(const char* name);
+void load();
+void load(loader_function fun);
 }
 
 #if defined(MYGL_IMPLEMENTATION)
@@ -25,78 +27,95 @@ constexpr const char* file_loader_code = R"(#pragma once
 #else
 #include <dlfcn.h>
 #endif
-namespace {
-class function_loader
+
+namespace mygl
 {
-public:
-    function_loader()
+
+namespace {
+    class function_loader
     {
-        for (size_t i = 0; i < std::size(libs); ++i) {
-#ifdef _WIN32
-            hnd = LoadLibraryA(libs[i]);
-#else
-            hnd = dlopen(libs[i], RTLD_LAZY | RTLD_GLOBAL);
-#endif
-            if (hnd != nullptr)
-                break;
+    public:
+        function_loader(loader_function fun)
+            : get_fun(static_cast<decltype(get_fun)>(fun))
+        {
+
         }
 
-#ifdef __APPLE__
-        get_fun = nullptr;
-#elif defined _WIN32
-        get_fun = reinterpret_cast<decltype(get_fun)>(get_handle(hnd, "wglGetProcAddress"));
-#else
-        get_fun = reinterpret_cast<decltype(get_fun)>(get_handle(hnd, "glXGetProcAddressARB"));
-#endif
-    }
+        function_loader()
+        {
+            for (size_t i = 0; i < std::size(libs); ++i) {
+    #ifdef _WIN32
+                hnd = LoadLibraryA(libs[i]);
+    #else
+                hnd = dlopen(libs[i], RTLD_LAZY | RTLD_GLOBAL);
+    #endif
+                if (hnd != nullptr)
+                    break;
+            }
 
-    void* get(const char* name)
-    {
-        void* addr = get_fun ? get_fun(name) : nullptr;
-        return addr ? addr : get_handle(hnd, name);
-    }
+    #ifdef __APPLE__
+            get_fun = nullptr;
+    #elif defined _WIN32
+            get_fun = reinterpret_cast<decltype(get_fun)>(get_handle(hnd, "wglGetProcAddress"));
+    #else
+            get_fun = reinterpret_cast<decltype(get_fun)>(get_handle(hnd, "glXGetProcAddressARB"));
+    #endif
+        }
 
-private:
-    void *hnd;
+        void* get(const char* name)
+        {
+            void* addr = get_fun ? get_fun(name) : nullptr;
+            return addr ? addr : get_handle(hnd, name);
+        }
 
-    void* get_handle(void* handle, const char* name)
-    {
-#if defined _WIN32
-        return static_cast<void*>(GetProcAddress(static_cast<HMODULE>(handle), name));
-#else
-        return dlsym(handle, name);
-#endif
-    }
+    private:
+        void *hnd;
 
-    void* (APIENTRY *get_fun)(const char*) = nullptr;
+        void* get_handle(void* handle, const char* name)
+        {
+    #if defined _WIN32
+            return static_cast<void*>(GetProcAddress(static_cast<HMODULE>(handle), name));
+    #else
+            return dlsym(handle, name);
+    #endif
+        }
 
-#ifdef __APPLE__
-    constexpr static std::array<const char *, 4> libs = {
-        "../Frameworks/OpenGL.framework/OpenGL",
-        "/Library/Frameworks/OpenGL.framework/OpenGL",
-        "/System/Library/Frameworks/OpenGL.framework/OpenGL",
-        "/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL"
+        void* (APIENTRY *get_fun)(const char*) = nullptr;
+
+    #ifdef __APPLE__
+        constexpr static std::array<const char *, 4> libs = {
+            "../Frameworks/OpenGL.framework/OpenGL",
+            "/Library/Frameworks/OpenGL.framework/OpenGL",
+            "/System/Library/Frameworks/OpenGL.framework/OpenGL",
+            "/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL"
+        };
+    #elif defined _WIN32
+        constexpr static std::array<const char *, 2> libs = { "opengl32.dll" };
+    #else
+    #if defined __CYGWIN__
+        constexpr static std::array<const char *, 3> libs = {
+            "libGL-1.so",
+    #else
+        constexpr static std::array<const char *, 2> libs = {
+    #endif
+            "libGL.so.1",
+            "libGL.so"
+        };
+    #endif
     };
-#elif defined _WIN32
-    constexpr static std::array<const char *, 2> libs = { "opengl32.dll" };
-#else
-#if defined __CYGWIN__
-    constexpr static std::array<const char *, 3> libs = {
-        "libGL-1.so",
-#else
-    constexpr static std::array<const char *, 2> libs = {
-#endif
-        "libGL.so.1",
-        "libGL.so"
-    };
-#endif
-};
+)";
 
-void* __get_mygl_func(const char* name)
+constexpr const char* loading_functions = R"(
+void load()
 {
-    static function_loader fl;
-    return fl.get(name);
+    function_loader loader;
+    load_impl(loader);
 }
+
+void load(loader_function fun)
+{
+    function_loader loader(fun);
+    load_impl(loader);
 }
 )";
 
@@ -108,12 +127,17 @@ void write_loader(const gen::settings& settings, const std::filesystem::path& in
     file_loader << file_loader_info;
     file_loader_inl << file_loader_code;
 
-    file_loader_inl << "\nnamespace mygl {\nvoid load() {\n";
+    file_loader_inl << "\n    void load_impl(function_loader& loader) {\n";
     for(auto&& command : settings.commands)
     {
-        file_loader_inl << "    " << command << " = reinterpret_cast<decltype(" << command
-                        << ")>(__get_mygl_func(\"" << command << "\"));\n";
+        file_loader_inl << "        " << command << " = reinterpret_cast<decltype(" << command
+                        << ")>(loader.get(\"" << command << "\"));\n";
     }
-    file_loader_inl << "}\n}\n";
+    file_loader_inl << "    }\n}";
+
+    file_loader_inl << loading_functions;
+
+    file_loader_inl << "}\n";
+
 }
 }

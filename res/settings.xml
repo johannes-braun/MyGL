@@ -1,6 +1,6 @@
 
 <mygl-generator>
-  <platform use-khr="false">core</platform>
+  <platform use-khr="true">core</platform>
   <extensions>
     <extension>GL_ARB_bindless_texture</extension>
     <extension>GL_ARB_direct_state_access</extension>
@@ -11,6 +11,12 @@
     <extension>GL_EXT_texture_filter_anisotropic</extension>
     <extension>GL_EXT_polygon_offset_clamp</extension>
     <extension>GL_EXT_depth_bounds_test</extension>
+    <extension>GL_EXT_semaphore</extension>
+    <extension>GL_EXT_memory_object</extension>
+    <extension>GL_EXT_memory_object_win32</extension>
+    <extension>GL_EXT_semaphore_win32</extension>
+    <extension>GL_EXT_memory_object_fd</extension>
+    <extension>GL_EXT_semaphore_fd</extension>
 
     <extension>GL_KHR_debug</extension>
 
