@@ -11,8 +11,8 @@ constexpr const char* file_loader_info = R"(#pragma once
 namespace mygl { 
 void load();
 void load(loader_function fun);
-void load(dispatch* d);
-void load(dispatch* d, loader_function fun);
+void load(MYGL_DISPATCH_NAME* d);
+void load(MYGL_DISPATCH_NAME* d, loader_function fun);
 }
 
 #if defined(MYGL_IMPLEMENTATION)
@@ -28,6 +28,11 @@ constexpr const char* file_loader_code = R"(#pragma once
 #else
 #include <dlfcn.h>
 #endif
+
+#ifndef APIENTRY
+#define APIENTRY
+#define MYGL_REMOVE_APIENTRY
+#endif // APIENTRY
 
 namespace mygl
 {
@@ -108,13 +113,13 @@ namespace {
 
 constexpr const char* loading_functions = R"(
 
-void load(dispatch* d)
+void load(MYGL_DISPATCH_NAME* d)
 {
     function_loader loader;
     load_impl(d, loader);
 }
 
-void load(dispatch* d, loader_function fun)
+void load(MYGL_DISPATCH_NAME* d, loader_function fun)
 {
     function_loader loader(fun);
     load_impl(d, loader);
@@ -136,10 +141,12 @@ void write_loader(const gen::settings& settings, const std::filesystem::path& in
     std::ofstream file_loader(install_dir / "mygl/mygl_loader.hpp");
     std::ofstream file_loader_inl(install_dir / "mygl/mygl_loader.inl");
 
+    file_loader << "#define MYGL_DISPATCH_NAME " << dispatch_type_name << "\n";
     file_loader << file_loader_info;
+    file_loader << "#undef MYGL_DISPATCH_NAME\n";
     file_loader_inl << file_loader_code;
 
-    file_loader_inl << "\n    void load_impl(dispatch* d, function_loader& loader) {\n";
+    file_loader_inl << "\n    void load_impl(MYGL_DISPATCH_NAME* d, function_loader& loader) {\n";
     for(auto&& command : settings.commands)
     {
         std::string fun_name = command;
@@ -156,6 +163,12 @@ void write_loader(const gen::settings& settings, const std::filesystem::path& in
     file_loader_inl << loading_functions;
 
     file_loader_inl << "}\n";
+    file_loader_inl << R"(#if defined(MYGL_REMOVE_APIENTRY)
+#undef APIENTRY
+#undef MYGL_REMOVE_APIENTRY
+#endif // MYGL_REMOVE_APIENTRY
+
+    )";
 
 }
 }

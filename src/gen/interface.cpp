@@ -28,16 +28,7 @@ You can then run the loader after context-creation and after making a context cu
 
 -----------------------------------
 
-DISPATCH BASED MULTITHREADING
-
-Along with the default loader functionality, you can also create context-based dispatch-table objects:
-    
-    mygl::dispatch* my_table = mygl::create_dispatch();
-    mygl::set_current_dispatch(my_table);
-     // ...
-    mygl::destroy_dispatch(my_table);
-
-After destroying a dispatch table, the default one is being bound automatically. You can manually reset by passing nullptr to mygl::set_current_dispatch.
+If there is a need to have multiple loaders, you can use a mygl::dispatch
 
 -----------------------------------
 */

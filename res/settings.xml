@@ -1,7 +1,11 @@
 
 <mygl-generator>
-  <platform use-khr="true">core</platform>
   <general>
+    <platform>
+      <version major="4" minor="6"/>
+      <profile value="core"/>
+      <include-khr value="true"/>
+    </platform>
     <dispatch>
       <keep-prefix value="false"/>
       <start-caps  value="false"/>
@@ -70,7 +74,7 @@
     </handle-rule>
 
     <handle-rule typename="texture" type="std::uint32_t">
-      <match param-expression="texture(s|)"/>
+      <match param-expression="texture(s|)" command-expression="((?!glActiveTexture).)*"/>
       <match command-expression="glTextureView" param-expression="origtexture"/>
     </handle-rule>
 
@@ -92,7 +96,7 @@
     </handle-rule>
 
     <handle-rule typename="command_list" type="std::uint32_t">
-      <match param-expression="list(s|)"/>
+      <match param-expression="list(s|)" command-expression=".*CommandList.*"/>
     </handle-rule>
 
     <handle-rule typename="state" type="std::uint32_t">

@@ -20,7 +20,7 @@ add_executable(mygl_gen ${SOURCE_CPP})
 set_target_properties(mygl_gen PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(mygl_gen PROPERTIES CXX_STANDARD 17)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    target_link_libraries(mygl_gen stdc++fs)
+    target_link_libraries(mygl_gen stdc++fs stdc++)
 endif()
 
 file(DOWNLOAD https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/master/xml/gl.xml ${PROJECT_SOURCE_DIR}/bin/gl.xml)

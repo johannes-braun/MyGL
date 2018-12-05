@@ -12,16 +12,18 @@ settings::settings(const std::filesystem::path& settings_xml_path,
     pugi::xml_node gen      = settings_xml.child("mygl-generator");
     pugi::xml_node exts     = gen.child("extensions");
     pugi::xml_node cmds     = gen.child("commands");
-    pugi::xml_node platform = gen.child("platform");
     pugi::xml_node typedefs = gen.child("typedefs");
     pugi::xml_node general  = gen.child("general");
 
-    if(platform.first_child().value() == "compat"sv)
+    pugi::xml_node platform = general.child("platform");
+    if(platform.child("profile").attribute("value").as_string("core") == "compat"sv)
         gl_profile = profile::compat;
     else
         gl_profile = profile::core;
 
-    use_khr = platform.attribute("use-khr").as_bool(false);
+    use_khr = platform.child("include-khr").attribute("value").as_bool(false);
+    version_major = platform.child("version").attribute("major").as_int(4);
+    version_minor = platform.child("version").attribute("minor").as_int(6);
 
     for(pugi::xml_node e : exts.children("extension"))
         enabled_extensions.emplace(e.first_child().value());
@@ -38,6 +40,9 @@ settings::settings(const std::filesystem::path& settings_xml_path,
     for(pugi::xml_node feature : opengl_xml.child("registry").children("feature"))
     {
         if(std::strcmp(feature.attribute("api").as_string(), "gl") != 0)
+            continue;
+        if(feature.attribute("number").as_float() >
+            atof((std::to_string(version_major) + "." + std::to_string(version_minor)).c_str()))
             continue;
 
         for(pugi::xml_node require : feature.children("require"))
@@ -83,7 +88,7 @@ settings::settings(const std::filesystem::path& settings_xml_path,
         }
         for(pugi::xml_node remove : feature.children("remove"))
         {
-            if((gl_profile != profile::core) || (!remove.attribute("profile") ||
+            if((gl_profile == profile::core) && (!remove.attribute("profile") ||
                          std::strcmp(remove.attribute("profile").as_string(), "core") == 0))
             {
                 for(pugi::xml_node enumerator : remove.children("enum"))

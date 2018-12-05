@@ -9,6 +9,7 @@
 namespace files
 {
 constexpr const char* file_header = "#pragma once\n\n";
+constexpr const char* dispatch_type_name = "dispatch_table";
 
 struct matcher
 {

@@ -28,6 +28,8 @@ public:
     string_set         enums;
     string_set         commands;
     typedef_map        type_replacements;
+    int version_major;
+    int version_minor;
     struct
     {
         bool keep_prefix;

@@ -15,7 +15,6 @@ constexpr const char* file_functions_info = R"(#pragma once
 #else
 #   define MYGL_NOEXCEPT
 #endif
-
 )";
 
 void write_commands(const gen::settings& settings, const std::filesystem::path& install_dir,
@@ -31,20 +30,20 @@ void write_commands(const gen::settings& settings, const std::filesystem::path& 
         R"(
 namespace mygl
 {
-    void load(dispatch* d);
-    void load(dispatch* d, loader_function fun);
+    void load(MYGL_DISPATCH_NAME* d);
+    void load(MYGL_DISPATCH_NAME* d, loader_function fun);
 
-    dispatch::dispatch(bool load)
+    MYGL_DISPATCH_NAME::MYGL_DISPATCH_NAME(bool load)
     {
         if(load) mygl::load(this);
     }
 
-    dispatch::dispatch(loader_function loader)
+    MYGL_DISPATCH_NAME::MYGL_DISPATCH_NAME(loader_function loader)
     {
         mygl::load(this, loader);
     }
-    namespace { mygl::dispatch static_dispatch; }
-    mygl::dispatch& get_static_dispatch() noexcept
+    namespace { MYGL_DISPATCH_NAME static_dispatch; }
+    MYGL_DISPATCH_NAME& get_static_dispatch() noexcept
     {
         return static_dispatch;
     }
@@ -52,9 +51,11 @@ namespace mygl
 )";
 
     std::stringstream file_context;
+    file_context 
+        << "#define MYGL_DISPATCH_NAME " << dispatch_type_name << "\n";
     file_context << "\nnamespace mygl {\n"
         "using loader_function = void*(*)(const char* name);\n"
-        "struct dispatch {\n";
+        "struct MYGL_DISPATCH_NAME {\n";
 
     pugi::xml_node commands_node = settings.opengl_xml.child("registry")
                                            .find_child_by_attribute("commands", "namespace", "GL");
@@ -184,14 +185,14 @@ namespace mygl
     }
 
     file_context << R"(
-    dispatch(bool load = false);
-    dispatch(loader_function loader);
+    MYGL_DISPATCH_NAME(bool load = false);
+    MYGL_DISPATCH_NAME(loader_function loader);
 
-    dispatch(const dispatch&) = delete;
-    dispatch(dispatch&&) = default;
-    dispatch& operator=(const dispatch&) = delete;
-    dispatch& operator=(dispatch&&) = default;
-    ~dispatch() = default;
+    MYGL_DISPATCH_NAME(const MYGL_DISPATCH_NAME&) = delete;
+    MYGL_DISPATCH_NAME(MYGL_DISPATCH_NAME&&) = default;
+    MYGL_DISPATCH_NAME& operator=(const MYGL_DISPATCH_NAME&) = delete;
+    MYGL_DISPATCH_NAME& operator=(MYGL_DISPATCH_NAME&&) = default;
+    ~MYGL_DISPATCH_NAME() = default;
 )";
 
     file_context << "};\n"
@@ -199,5 +200,7 @@ namespace mygl
     file_functions << file_context.str();
     file_functions
             << "\n#if defined(MYGL_IMPLEMENTATION)\n#include \"mygl_functions.inl\"\n#endif\n";
+
+    file_functions << "#undef MYGL_DISPATCH_NAME\n";
 }
 }
